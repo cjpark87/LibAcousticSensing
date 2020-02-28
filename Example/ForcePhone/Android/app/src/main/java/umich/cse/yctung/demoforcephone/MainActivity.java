@@ -32,7 +32,7 @@ public class MainActivity extends AppCompatActivity implements AcousticSensingCo
         // Link UI elements
         spinnerMode = (Spinner)findViewById(R.id.spinnerMode);
         String[] modes = new String[]{"Server-client Mode","Real-time Mode"};
-        ArrayAdapter<String> adapter = new ArrayAdapter<String>(this, R.layout.support_simple_spinner_dropdown_item, modes);
+        ArrayAdapter<String> adapter = new ArrayAdapter<String>(this, android.R.layout.simple_list_item_1, modes);
         spinnerMode.setAdapter(adapter);
         spinnerMode.setSelection(0);
 
@@ -63,7 +63,11 @@ public class MainActivity extends AppCompatActivity implements AcousticSensingCo
                     asc.startSensingWhenPossible();
                 }
             } else { // real-time mode
-
+                boolean result = asc.initAsStandaloneMode("audio_source.json", "signal.dat", "preamble.dat", "sync.dat");;
+                if (!result) textViewDebugInfo.setText("Init fails");
+                else {
+                    asc.startSensingWhenPossible();
+                }
             }
             buttonStart.setText("Stop");
         } else { // need to stop sensing

@@ -11,6 +11,8 @@ if strcmp(computer,'GLNXA64'), % ubuntu in lab
     addpath(genpath(strcat(pwd,'/3rdLibs/libsvm_ubuntu/')));
 elseif strcmp(computer,'MACI64'), % MAC air
     addpath(genpath(strcat(pwd,'/3rdLibs/libsvm_mac/')));
+elseif strcmp(computer,'PCWIN64'), % MAC air
+    addpath(genpath(strcat(pwd,'/3rdLibs/libsvm_windows/')));
 else
     fprintf(2,'[WARNING]: fails to load libsvm (you might need to compile libsvm and add to your path) = %s\n', computer);
 end

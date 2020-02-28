@@ -8,6 +8,8 @@ function [] = AppForcePhoneCallback( obj, type, data )
     global detectResultsAllSqueezeEndIdxs;
     
     global detectResults;
+    global sRatioResults;
+    global sRatioTo2EndsResults;
     global detectResps; % real result being estimated by squeeze detect
     global detectResultsEnd;
     global resultIdxSqueezeStart;
@@ -21,10 +23,12 @@ function [] = AppForcePhoneCallback( obj, type, data )
 
     % parse audio data
     if type == obj.CALLBACK_TYPE_INIT,
-        LINE_CNTS = [2,2,4]; % size of it is the number of figure axes, and the number in it is the number of lines per axe
+        LINE_CNTS = [2,2,4,2]; % size of it is the number of figure axes, and the number in it is the number of lines per axe
         detectResultsEnd = 0;
         detectResults = zeros(DETECT_RESULT_SIZE, 1);
         detectResps = zeros(DETECT_RESULT_SIZE, 1);
+        sRatioResults = zeros(DETECT_RESULT_SIZE, 1);
+        sRatioTo2EndsResults = zeros(DETECT_RESULT_SIZE, 1);
 
         resultIdxSqueezeStart = 0;
         resultIdxSqueezeEnd = 0;
@@ -49,7 +53,7 @@ function [] = AppForcePhoneCallback( obj, type, data )
         % line1: data 
         check1 = findobj('Tag','check01');
         if check1.Value == 1,
-            for chIdx = 1:2,
+            for chIdx = 1:1,
                 line = findobj('Tag',sprintf('line01_%02d',chIdx));
                 dataToPlot = data(:,end,chIdx);
                 set(line, 'yData', dataToPlot); % only show the 1st ch
@@ -77,6 +81,8 @@ function [] = AppForcePhoneCallback( obj, type, data )
                 toShift = detectResultsEnd+nowSize - DETECT_RESULT_SIZE;
                 detectResults(1:end-toShift) = detectResults(toShift+1:end);
                 detectResps(1:end-toShift) = detectResps(toShift+1:end);
+                sRatioResults(1:end-toShift) = sRatioResults(toShift+1:end);
+                sRatioTo2EndsResults(1:end-toShift) = sRatioTo2EndsResults(toShift+1:end);
 
                 detectResultsEnd = detectResultsEnd - nowSize;
                 resultIdxSqueezeStart = max(0, resultIdxSqueezeStart - toShift);
@@ -91,16 +97,23 @@ function [] = AppForcePhoneCallback( obj, type, data )
                     break;
                 end
                 s = detectResults(startIdx:endIdx);
-                [~, peaks, status] = SqueezeTwiceDetect(s);
+                [sRatio, sRatioTo2Ends, peaks, status] = SqueezeTwiceDetect(s);
                 detectResps(endIdx) = status;
 
+                sRatioResults(startIdx:endIdx) = sRatio;
+                sRatioTo2EndsResults(startIdx:endIdx) = sRatioTo2Ends;
+                
                 % return the result if need
                 if PS.detectEnabled,
                     status
                     obj.sendResult(status, 0.0);
                 end
+                
+                
             end
 
+            set(findobj('Tag', 'line04_01'), 'yData', sRatioResults) 
+            set(findobj('Tag', 'line04_02'), 'yData', sRatioTo2EndsResults)
 
             detectResultsEnd = detectResultsEnd+nowSize;
             set(line, 'yData', detectResults); % only show the 1st ch
@@ -108,18 +121,18 @@ function [] = AppForcePhoneCallback( obj, type, data )
             resultMax = max(detectResults);
 
             % plot the resps code
-            line = findobj('Tag','line03_02');
-            yData = (detectResps == 3)*resultMax;
-            set(line, 'yData', yData);
+            %line = findobj('Tag','line03_02');
+            %yData = (detectResps == 3)*resultMax;
+            %set(line, 'yData', yData);
 
             % plot vertical lines (for squeeze start and end)
 
-            line = findobj('Tag','line03_03');
-            set(line, 'yData', [resultMin, resultMax]);
-            set(line, 'xData', [resultIdxSqueezeStart, resultIdxSqueezeStart]);
-            line = findobj('Tag','line03_04');
-            set(line, 'yData', [resultMin, resultMax]);
-            set(line, 'xData', [resultIdxSqueezeEnd, resultIdxSqueezeEnd]);
+            %line = findobj('Tag','line03_03');
+            %set(line, 'yData', [resultMin, resultMax]);
+            %set(line, 'xData', [resultIdxSqueezeStart, resultIdxSqueezeStart]);
+            %line = findobj('Tag','line03_04');
+            %set(line, 'yData', [resultMin, resultMax]);
+            %set(line, 'xData', [resultIdxSqueezeEnd, resultIdxSqueezeEnd]);
         end
     elseif type == obj.CALLBACK_TYPE_USER,
         % parse user data
